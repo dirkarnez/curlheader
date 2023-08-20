@@ -1,21 +1,32 @@
 package curlheader
 
-func GetCurlHeader() {
-ex, err := os.Executable()
-	checkErr(err)
-	exPath := filepath.Dir(ex)
+import (
+	"fmt"
+	"net/http"
+	"os"
+	"regexp"
+)
 
-dat, err := os.ReadFile(filepath.Join(exPath, "seed.txt"))
-	checkErr(err)
+func GetCurlHeader(file string) (http.Header, error) {
+	if len(file) < 1 {
+		return nil, fmt.Errorf("no file")
+	}
+
+	dat, err := os.ReadFile(file)
+	if err != nil {
+		return nil, err
+	}
+
 	str := string(dat)
 
 	re := regexp.MustCompile(`-H\s+'([^:]+):\s+([^']+)'`)
 	matched := re.FindAllStringSubmatch(str, -1)
 
-
-	var currentHeaders map[string][]string = map[string][]string{}
+	var currentHeaders http.Header = http.Header{}
 
 	for _, header := range matched {
-		currentHeaders[header[1]] = []string{header[2]}
+		currentHeaders.Add(header[1], header[2])
 	}
+
+	return currentHeaders, nil
 }
