@@ -19,13 +19,17 @@ func GetCurlHeader(file string) (http.Header, error) {
 
 	str := string(dat)
 
-	re := regexp.MustCompile(`-H\s+'([^:]+):\s+([^']+)'`)
-	matched := re.FindAllStringSubmatch(str, -1)
+	matchedNonCookieHeader := regexp.MustCompile(`-H\s+'([^:]+):\s+([^']+)'`).FindAllStringSubmatch(str, -1)
+	matchedCookieHeader := regexp.MustCompile(`-b\s+'([^']+)'`).FindAllStringSubmatch(str, -1)
 
 	var currentHeaders http.Header = http.Header{}
 
-	for _, header := range matched {
-		currentHeaders.Add(header[1], header[2])
+	for _, header := range matchedNonCookieHeader {
+		currentHeaders.Set(header[1], header[2])
+	}
+
+	for _, header := range matchedCookieHeader {
+		currentHeaders.Set("cookie", header[1])
 	}
 
 	return currentHeaders, nil
